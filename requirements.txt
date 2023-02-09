@@ -1,0 +1,5 @@
+lxml==4.9.1
+pandas==1.1.5
+redis==3.5.3
+requests==2.27.1
+selenium==3.141.0
