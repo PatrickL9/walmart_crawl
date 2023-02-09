@@ -18,6 +18,7 @@ from html_file.html_file2 import html_text as h2
 from html_file.product_detail import html_text as h3
 from lxml import etree
 from util import logging_util
+from collections import defaultdict
 import walmart_cookie_generate
 
 # 代理API
@@ -165,6 +166,10 @@ def get_product_detail_by_script(product_list):
             shortDescription = product_detail['idml']['shortDescription']
             # 产品规范 specification
             specification = product_detail['idml']['specifications']
+            specification_text = ''
+            for sc in specification:
+                for v in sc.values():
+                    specification_text = specification_text + '\n' + v
             # 产品保修 Warranty
             warranty = product_detail['idml']['warranty']['information']
             # 标题
@@ -174,7 +179,7 @@ def get_product_detail_by_script(product_list):
             # 产品ID
             item_id = product_detail['product']['usItemId']
             # 卖家
-            seller_name = ['sellerDisplayName']
+            seller_name = product_detail['product']['sellerDisplayName']
             # 评论数
             stars = product_detail['reviews']['averageOverallRating']
             # 总评论数
@@ -196,11 +201,11 @@ def get_product_detail_by_script(product_list):
             varirant_dict = {}
             for vl in varirant_list:
                 for n in vl['variantList']:
-                    varirant_list.setdefault(vl['name'], []).append(n['name'])
+                    varirant_dict.setdefault(vl['name'], []).append(n['name'])
 
             temp_dict = {
                 'item_id': item_id,
-                'product_url': product_url,
+                'product_url': 'www.walmart.com' + product_url,
                 # 'ad_tag': ad_tag,
                 'title': title,
                 'catalog_full': catalog_full,
@@ -212,7 +217,7 @@ def get_product_detail_by_script(product_list):
                 'shipping_method': shipping_method,
                 'shortDescription': shortDescription,
                 'longDescription': longDescription,
-                'specification': specification,
+                'specification': specification_text.strip(),
                 'warranty': warranty,
                 'reviews': reviews,
                 'stars': stars,
