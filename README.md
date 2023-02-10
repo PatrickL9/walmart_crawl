@@ -44,14 +44,13 @@
 
 17、排名：排名就是在三级类目页，例如,排名P13 第一页第三个位置
 
-![img_1.png](img/img_1.png) 图1.8
-![img_2.png](img/img_2.png) 图1.9
-![img_3.png](img/img_3.png) 图1.10
-![img_4.png](img/img_4.png) 图1.11
-![img_5.png](img/img_5.png) 图1.12
-![img_6.png](img/img_6.png) 图1.13
-![img_7.png](img/img_7.png) 图1.14
-![img_8.png](img/img_8.png) 图1.15
-![img_9.png](img/img_9.png) 图1.16
-![img.png](img/img.png) 图2.0
-
+ ![](img/img1.08.png) 图1.8
+ ![](img/img1.09.png) 图1.9
+ ![](img/img1.10.png) 图1.10
+ ![](img/img1.11.png) 图1.11
+ ![](img/img1.12.png) 图1.12
+ ![](img/img1.13.png) 图1.13
+ ![](img/img1.14.png) 图1.14
+ ![](img/img1.15.png) 图1.15
+ ![](img/img1.16.png) 图1.16
+ ![](img/img2.0.png) 图2.0
