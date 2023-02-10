@@ -1,5 +1,5 @@
-import logging
 import random
+import os
 # import ja3
 # import proxy
 from selenium import webdriver
@@ -7,6 +7,11 @@ import time
 import json
 from util import logging_util
 from util.setting import REDIS_CLIENT, WALMART_COOKIE_KEY
+
+# 日志文件前缀
+logging_path = os.getcwd() + '.log'
+# 设置日志级别
+logging = logging_util.LoggingUtil("INFO", logging_path).get_logging()
 
 headers = {
     'authority': 'www.walmart.com',
@@ -35,6 +40,7 @@ def get_random_cookie():
     if avail_cookie == 0:
         logging.error("已经没有可用cookie")
         exit()
+        logging.info('获取一个随机cookie')
     num = random.choice(list(range(avail_cookie)))
     cookies = json.loads(REDIS_CLIENT.lrange(WALMART_COOKIE_KEY, num, num)[0])
     return cookies
@@ -95,6 +101,7 @@ def clean_cookie():
     清理掉redis当中原有的cookie
     :return:
     """
+    logging.info("清空redis中所有cookie")
     # 清除表中历史cookie
     REDIS_CLIENT.delete(WALMART_COOKIE_KEY)
 
@@ -132,5 +139,11 @@ def cookie_produce():
 
 
 if __name__ == '__main__':
-    for i in range(30):
+    clean_cookie()
+    cookie_num = REDIS_CLIENT.llen(WALMART_COOKIE_KEY)
+    cookie_need = 3
+    logging.info('当前cookie池一共有{}个cookie'.format(cookie_num))
+    logging.info('仍需要生成{}个cookie'.format(cookie_need - cookie_num))
+    for i in range(cookie_need - cookie_num):
+        logging.info('正在生成第{}个cookie'.format(i+1))
         cookie_produce()

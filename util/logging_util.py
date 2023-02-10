@@ -6,6 +6,7 @@
 """
 
 import logging
+import colorlog
 
 logging_level = {"INFO": logging.INFO,
                  "ERROR": logging.ERROR,
@@ -14,6 +15,13 @@ logging_level = {"INFO": logging.INFO,
                  "CRITICAL": logging.CRITICAL
                  }
 
+log_colors_config = {
+    'DEBUG': 'white',  # cyan white
+    'INFO': 'green',
+    'WARN': 'yellow',
+    'ERROR': 'red',
+    'CRITICAL': 'bold_red',
+}
 
 class LoggingUtil:
 
@@ -40,6 +48,15 @@ class LoggingUtil:
             '%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s'
             )
         )
+        # 设置日志打印颜色
+        console.setFormatter(
+            colorlog.ColoredFormatter(
+            fmt='%(log_color)s[%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
+            # datefmt='%Y-%m-%d  %H:%M:%S',
+            log_colors=log_colors_config
+            )
+        )
+
         # 将定义好的console日志handler添加到root logger
         logging.getLogger('').addHandler(console)
         return logging
