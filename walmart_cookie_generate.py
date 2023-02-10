@@ -1,7 +1,14 @@
+# -*- coding: UTF-8 -*-
+#!/usr/bin/python3
+
+"""
+walamrt平台cookie池搭建
+@Author ：Patrick Lam
+@Date ：2023-02-09
+"""
+
 import random
 import os
-# import ja3
-# import proxy
 from selenium import webdriver
 import time
 import json
@@ -29,12 +36,12 @@ headers = {
 }
 
 
-# 获取配置
-# redis_client = walmart_spider_conf.redis_client
-# walmart_cookies_key = walmart_spider_conf.walmart_cookies_key
-
-
 def get_random_cookie():
+    """
+    在cookie池里随机抽取一个cookie
+    :param
+    :return:cookies 随机cookie
+    """
     # 随机提起cookie
     avail_cookie = REDIS_CLIENT.llen(WALMART_COOKIE_KEY)
     if avail_cookie == 0:
@@ -46,48 +53,12 @@ def get_random_cookie():
     return cookies
 
 
-# def spider(url, proxy_ip):
-#     """
-#     沃尔玛通用请求发起模块
-#     :param url: 请求地址
-#     :param proxy_ip: 代理ip
-#     :return: response
-#     """
-#     logging.info("开始准备请求")
-#     cookies = get_random_cookie()
-#     s = requests.session()
-#     s.keep_alive = False
-#     s.mount(url, ja3.DESAdapter())
-#     try:
-#         response = s.get(url, headers=headers, cookies=cookies, proxies=proxy_ip, timeout=10)
-#         logging.info("数据返回成功")
-#     except Exception as e:
-#         logging.error("请求出现异常,准备重试")
-#         time.sleep(1)
-#         proxy_ip = proxy.get_proxies()
-#         response = spider(url, proxy_ip)
-#     if "Activate and hold the button to confirm that you’re human" in response.text:
-#         logging.error("出现验证码,移除当前所使用的cookie并开始重试")
-#         redis_client.lrem(walmart_cookies_key, 0, json.dumps(cookies))
-#         time.sleep(1)
-#         proxy_ip = proxy.get_proxies()
-#         response = spider(url, proxy_ip)
-#     return response
-#
-#
-# def url_handler(url):
-#     """
-#     处理部分截取的链接不含域名部分的数据
-#     :param url: url地址
-#     :return: 完整沃尔玛url
-#     """
-#     url = str(url)
-#     if not url.startswith("https") and url != 'nan' and url.strip() != "":
-#         url = "https://www.walmart.com" + url
-#     return url
-
-
 def chrome_conifg():
+    """
+    配置selenium参数，用于生成cookie
+    :param
+    :return:chrome_options:selenium参数
+    """
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
     chrome_options.add_argument('--no-sandbox')
@@ -98,7 +69,7 @@ def chrome_conifg():
 
 def clean_cookie():
     """
-    清理掉redis当中原有的cookie
+    清空redis当中所有的cookie
     :return:
     """
     logging.info("清空redis中所有cookie")
@@ -108,8 +79,7 @@ def clean_cookie():
 
 def cookie_produce():
     """
-    使用seleliumn生成一个可用的walmart cookie
-    存放至redis
+    使用seleliumn生成一个可用的walmart cookie，存放至redis
     :return:
     """
     chrome_options = chrome_conifg()
@@ -139,11 +109,15 @@ def cookie_produce():
 
 
 if __name__ == '__main__':
+    # 清空redis中所有cookie
     clean_cookie()
+    # 当前cookie池已拥有的cookie数量
     cookie_num = REDIS_CLIENT.llen(WALMART_COOKIE_KEY)
+    # 配置所需要创建的cookie数量
     cookie_need = 3
     logging.info('当前cookie池一共有{}个cookie'.format(cookie_num))
     logging.info('仍需要生成{}个cookie'.format(cookie_need - cookie_num))
     for i in range(cookie_need - cookie_num):
         logging.info('正在生成第{}个cookie'.format(i+1))
+        # 开始执行cookie生成
         cookie_produce()

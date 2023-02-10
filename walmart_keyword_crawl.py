@@ -87,7 +87,7 @@ def get_all_url(url_r):
 
 def get_product_detail(product_list):
     """
-    获取产品url，通过正则方式解析script，爬取产品url中的产品信息
+    获取产品url，通过解析script的application/json，获取详情页信息
     :param product_list: 所有产品url的列表
     :return:df_result 详情页信息明细
     """
@@ -100,6 +100,7 @@ def get_product_detail(product_list):
                              )
     # count = 0
     for pl in product_list:
+        # 检查是否重复产品链接
         crawl_tag = 0
         for ii in success_id:
             if pl[0] == ii:
