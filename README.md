@@ -53,5 +53,5 @@
 ![img_7.png](img/img_7.png) 图1.14
 ![img_8.png](img/img_8.png) 图1.15
 ![img_9.png](img/img_9.png) 图1.16
-![img_10.png](img/img_10.png) 图2.0
+![img.png](img/img.png) 图2.0
 
