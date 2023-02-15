@@ -12,13 +12,8 @@ import os
 from selenium import webdriver
 import time
 import json
-from util import logging_util
-from util.setting import REDIS_CLIENT, WALMART_COOKIE_KEY
+from util.setting import logging, REDIS_CLIENT, WALMART_COOKIE_KEY
 
-# 日志文件前缀
-logging_path = os.getcwd() + '.log'
-# 设置日志级别
-logging = logging_util.LoggingUtil("INFO", logging_path).get_logging()
 
 headers = {
     'authority': 'www.walmart.com',

@@ -23,6 +23,7 @@ log_colors_config = {
     'CRITICAL': 'bold_red',
 }
 
+
 class LoggingUtil:
 
     def __init__(self, level, logging_file):
@@ -44,16 +45,14 @@ class LoggingUtil:
         console.setLevel(logging_level[self.level])
         # 设置日志打印格式
         console.setFormatter(
-            logging.Formatter(
-            '%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s'
-            )
+            logging.Formatter('%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
         )
         # 设置日志打印颜色
         console.setFormatter(
             colorlog.ColoredFormatter(
-            fmt='%(log_color)s[%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
-            # datefmt='%Y-%m-%d  %H:%M:%S',
-            log_colors=log_colors_config
+                fmt='%(log_color)s[%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s',
+                # datefmt='%Y-%m-%d  %H:%M:%S',
+                log_colors=log_colors_config
             )
         )
 

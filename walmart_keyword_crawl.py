@@ -12,17 +12,9 @@ import random
 import time
 import requests
 import pandas as pd
-from html_file.html_file import html_text as h1
-from html_file.html_file2 import html_text as h2
 from lxml import etree
-from util import logging_util
-from util.setting import PROXY_URL, ipPool, main_url, headers, success_id
+from util.setting import logging, PROXY_URL, ipPool, main_url, headers, SUCCESS_ID, PRODUCT_LIST
 import walmart_cookie_generate
-
-# 日志文件前缀
-logging_path = os.getcwd() + '.log'
-# 设置日志级别
-logging = logging_util.LoggingUtil("INFO", logging_path).get_logging()
 
 
 def get_ip_pool():
@@ -49,41 +41,63 @@ def get_random_ip():
     return ip
 
 
-def get_all_url(url_r):
+def get_all_url(url_r, crawl_page):
     """
-    爬取初始url页面中所有的产品url
+    爬取初始url及其翻页中所有的产品url
     :param url_r: 初始url
-    :return:product_list: 所有产品url
+    :param crawl_page: 指定爬取页数（可选）
+    :return:PRODUCT_LIST: 所有产品的item_id、url和sponsored
     """
-    product_list = []
-    # product_list.append(['1103217313', ''])
-    # *******************自动版*************************
-    # proxies = {'http': get_random_ip()}
-    # resp = requests.get(url_r, headers=headers, proxies=proxies, timeout=5)
-    # text = resp.content.decode('utf-8')
-    # *************************************************
+    for i in range(1, crawl_page):
+        # 如果是第1页，取原url，如果是翻页，拼接翻页url
+        if i == 1:
+            crawl_url = url_r
+        else:
+            crawl_url = url_r + '?page={}&affinityOverride=default'.format(str(i))
+        i += 1
+        retry_cnt = 0
+        # 防反爬，重试三次
+        while retry_cnt <= 3:
+            retry_cnt += 1
+            logging.info('解析产品列表页，url链接： ' + crawl_url)
+            proxies = {'http': get_random_ip()}
+            cookies = walmart_cookie_generate.get_random_cookie()
+            resp = requests.get(crawl_url, headers=headers, proxies=proxies, cookies=cookies, timeout=5)
+            text = resp.content.decode('utf-8')
+            if 'Robot or human' in text:
+                logging.info('被反爬了，重试第{}次'.format(str(retry_cnt)))
+            else:
+                # 解析页面text
+                get_item_list(text)
+                break
+            # 放反爬，每次解析暂停5秒
+            time.sleep(5)
+    logging.info('解析产品列表结束，一共需爬取{}个产品链接'.format(len(PRODUCT_LIST)))
+    return PRODUCT_LIST
 
-    # *******************手动版*************************
-    # h1和h2是手动下载的html页面
-    html = etree.HTML(h1)
-    item_ids = html.xpath('//*[@id="maincontent"]//div[@data-item-id]')
-    for ii in item_ids:
-        link_ids = ii.xpath('./a/@link-identifier')
-        ad_tags = ii.xpath(
-            './div[@data-testid="list-view"]//div[@class="flex items-center lh-title h2-l normal"]/span/text()'
-        )
-        product_list.append([''.join(link_ids), ''.join(ad_tags)])
-    html = etree.HTML(h2)
-    item_ids = html.xpath('//*[@id="maincontent"]//div[@data-item-id]')
-    for ii in item_ids:
-        link_ids = ii.xpath('./a/@link-identifier')
-        ad_tags = ii.xpath(
-            './div[@data-testid="list-view"]//div[@class="flex items-center lh-title h2-l normal"]/span/text()'
-        )
-        product_list.append([''.join(link_ids), ''.join(ad_tags)])
-    logging.info('爬取首页成功，获取目标url共' + str(len(product_list)) + '个')
-    return product_list
 
+def get_item_list(h_text):
+    """
+    根据request返回的txt，解析json，获取所有产品url的列表
+    :param h_text: request返回的txt文本
+    :return:
+    """
+    html = etree.HTML(h_text)
+    json_data = html.xpath('//script[@type="application/json"]/text()')[0]
+    json_text = json.loads(json_data)
+    # with open('D:\pythonProject\walmart_crawl\html_file\product_list.json', encoding='UTF-8') as f:
+    #     json_text = json.load(f)
+    item_list = json_text['props']['pageProps']['initialData']['searchResult']['itemStacks'][0]['items']
+    for il in item_list:
+        try:
+            item_id = il['usItemId']
+            item_url = il['canonicalUrl']
+            sponsored = il['isSponsoredFlag']
+            # 获取的itemid,url和sponsored传进全局变量PRODUCT_LIST
+            PRODUCT_LIST.append([item_id, main_url + item_url, sponsored])
+            # print(item_id, main_url + item_url, sponsored)
+        except:
+            continue
 
 def get_product_detail(product_list):
     """
@@ -92,7 +106,7 @@ def get_product_detail(product_list):
     :return:df_result 详情页信息明细
     """
     # 定义一个dataframe，用于保存爬取结果
-    df_result = pd.DataFrame(columns=('item_id', 'product_url', 'title', 'catalog_full', 'brand', 'price',
+    df_result = pd.DataFrame(columns=('item_id', 'product_url', 'ad_tag', 'title', 'catalog_full', 'brand', 'price',
                                       'seller_name', 'proseller_tag', 'variant', 'shipping_method', 'shortDescription',
                                       'longDescription', 'specification', 'warranty',
                                       'reviews', 'stars', 'one_star_reviews', 'two_star_reviews', 'three_star_reviews',
@@ -102,14 +116,17 @@ def get_product_detail(product_list):
     for pl in product_list:
         # 检查是否重复产品链接
         crawl_tag = 0
-        for ii in success_id:
+        for ii in SUCCESS_ID:
             if pl[0] == ii:
                 logging.info('itemid {} 已被抓取过，跳过'.format(pl[0]))
                 crawl_tag = 1
                 break
         if crawl_tag == 1:
             continue
-        product_url = 'https://www.walmart.com/ip/' + pl[0]
+        # 产品详情页url
+        product_url = pl[1]
+        # 是否sponsored
+        ad_tag = pl[2]
         logging.info('开始解析产品详情页，解析url ' + product_url)
         # 获取随机代理IP和随机cookie
         proxies = {'http': get_random_ip()}
@@ -226,7 +243,7 @@ def get_product_detail(product_list):
             temp_dict = {
                 'item_id': item_id,
                 'product_url': 'www.walmart.com' + product_url,
-                # 'ad_tag': ad_tag,
+                'ad_tag': ad_tag,
                 'title': title,
                 'catalog_full': catalog_full,
                 'brand': brand,
@@ -251,7 +268,7 @@ def get_product_detail(product_list):
             # 把爬取结果插入到dataframe最后一行
             df_result.loc[len(df_result)] = temp_dict
             logging.info('本页爬取结束，itemid {} 加入已爬取队列'.format(pl[0]))
-            success_id.append(pl[0])
+            SUCCESS_ID.append(pl[0])
         logging.info('本页爬取结束，暂停5秒')
         time.sleep(5)
     return df_result
@@ -270,16 +287,17 @@ def save_to_csv(df, key_word):
     logging.info('保存结果到CSV文件，保存路径： ' + file_path)
 
 
-def run(url_f, key_word):
+def run(url_f, key_word, crawl_page):
     """
     程序运行本体
     :param url_f: 网址前缀
     :param key_word: 查询的关键词
+    :param crawl_page: 指定爬取页数（可选）
     :return:
     """
     get_ip_pool()
     logging.info('开始walmart关键词爬取。初始url: ' + url_f + ' 关键词： ' + key_word)
-    df = get_product_detail(get_all_url(url_f))
+    df = get_product_detail(get_all_url(url_f, crawl_page))
     # print(df)
     save_to_csv(df, key_word)
 
@@ -289,5 +307,7 @@ if __name__ == '__main__':
     url_front = 'https://www.walmart.com/browse/baby/double-strollers/5427_118134_1101428'
     # 搜索关键词
     ky = 'Double Strollers'
+    # 指定爬取页数
+    cp = 3
     # 传入网址和关键词，开始爬取
-    run(url_front, ky)
+    run(url_front, ky, cp)
