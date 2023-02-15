@@ -5,7 +5,7 @@
 
 2、运行`walmart_cookie_generate.py`，创建cookie池。cookie池数量视总爬取量而定。由于walmart反爬比较严格，建议每解析一个链接，消费一个cookie。
 
-3、修改`walmart_keyword_crawl.py`中的`run(url_front, ky)`，直接运行即可。
+3、修改`walmart_keyword_crawl.py`中的`run(url_front, ky, cp)`，直接运行即可。
 # 爬取信息
 1、搜索结果数：获取方式见图1.8
 
