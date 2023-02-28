@@ -8,16 +8,14 @@
 """
 
 import redis
-import os
-import datetime
-from util import logging_util
+from util import logging_util, proxy_pool
 
-# 日志级别
-LOGGING_LEVEL = 'INFO'
 
 # 代理API
 PROXY_URL = 'http://api.xdaili.cn/xdaili-api//greatRecharge/getGreatIp?spiderId=460e34f07cf041899a22e79353081288&orderno=YZ2021112078186AsWJy&returnType=1&count=3'
-ipPool = []
+# ipPool = []
+# 设置ip代理池
+proxy_pool = proxy_pool.ProxyPool(PROXY_URL)
 
 # 主站点链接
 main_url = 'https://www.walmart.com'
@@ -55,13 +53,3 @@ avail_cookie = REDIS_CLIENT.llen(WALMART_COOKIE_KEY)
 # print('WALMART_COOKIE_KEY的内容如下：')
 # print(REDIS_CLIENT.lrange(WALMART_COOKIE_KEY, 0, -1))
 
-
-# 日志文件保存路径
-logging_dir = os.getcwd() + r'\log'
-if not os.path.isdir(logging_dir):
-    os.makedirs(logging_dir)
-# 日志文件前缀处理
-to_day = datetime.datetime.now()
-LOGGING_PATH = logging_dir + r'\cd_crawl_{}{:02}{:02}.log'.format(to_day.year, to_day.month, to_day.day)
-# 设置日志级别
-logging = logging_util.LoggingUtil(LOGGING_LEVEL, LOGGING_PATH).get_logging()

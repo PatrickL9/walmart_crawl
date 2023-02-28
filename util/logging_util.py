@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 """
+日志类，根据设定的日志级别输出并保存日志
 @Author ：Patrick Lam
 @Date ：2023-01-31
 """

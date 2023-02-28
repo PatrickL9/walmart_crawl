@@ -8,37 +8,13 @@ walamrt平台根据关键词搜索，查询前3页查询结果的详情页信息
 """
 import json
 import os
-import random
 import time
 import requests
 import pandas as pd
 from lxml import etree
-from util.setting import logging, PROXY_URL, ipPool, main_url, headers, SUCCESS_ID, PRODUCT_LIST
+from util.setting import proxy_pool, main_url, headers, SUCCESS_ID, PRODUCT_LIST
+from util.logging_conf import logging
 import walmart_cookie_generate
-
-
-def get_ip_pool():
-    """
-    获取IP代理池
-    :param
-    :return:
-    """
-    logging.info('获取IP代理，搭建代理IP池')
-    ips = requests.get(PROXY_URL)
-    for ip in ips.text.split('\r\n'):
-        if len(ip) > 8:
-            ipPool.append('http://' + ip)
-
-
-def get_random_ip():
-    """
-    获取随机代理IP
-    :param
-    :return:随机代理IP
-    """
-    ip = random.choice(ipPool)
-    logging.info('获取随机代理IP: ' + ip)
-    return ip
 
 
 def get_all_url(url_r, crawl_page):
@@ -60,7 +36,7 @@ def get_all_url(url_r, crawl_page):
         while retry_cnt <= 3:
             retry_cnt += 1
             logging.info('解析产品列表页，url链接： ' + crawl_url)
-            proxies = {'http': get_random_ip()}
+            proxies = {'http': proxy_pool.get_random_ip()}
             cookies = walmart_cookie_generate.get_random_cookie()
             resp = requests.get(crawl_url, headers=headers, proxies=proxies, cookies=cookies, timeout=5)
             text = resp.content.decode('utf-8')
@@ -99,6 +75,7 @@ def get_item_list(h_text):
         except:
             continue
 
+
 def get_product_detail(product_list):
     """
     获取产品url，通过解析script的application/json，获取详情页信息
@@ -129,7 +106,7 @@ def get_product_detail(product_list):
         ad_tag = pl[2]
         logging.info('开始解析产品详情页，解析url ' + product_url)
         # 获取随机代理IP和随机cookie
-        proxies = {'http': get_random_ip()}
+        proxies = {'http': proxy_pool.get_random_ip()}
         cookies = walmart_cookie_generate.get_random_cookie()
         resp = requests.get(product_url, headers=headers, proxies=proxies, cookies=cookies, timeout=100)
 
@@ -219,7 +196,7 @@ def get_product_detail(product_list):
             first_review_date = ''
             review_url = 'https://www.walmart.com/reviews/product/{}?sort=submission-asc'.format(pl[0])
             logging.info('开始解析产品评论页，解析url ' + review_url)
-            proxies = {'http': get_random_ip()}
+            proxies = {'http': proxy_pool.get_random_ip()}
             cookies = walmart_cookie_generate.get_random_cookie()
 
             rv_count = 0
@@ -295,8 +272,10 @@ def run(url_f, key_word, crawl_page):
     :param crawl_page: 指定爬取页数（可选）
     :return:
     """
-    get_ip_pool()
+    # 构建代理池
+    proxy_pool.get_ip_pool()
     logging.info('开始walmart关键词爬取。初始url: ' + url_f + ' 关键词： ' + key_word)
+    # 开始爬虫解析
     df = get_product_detail(get_all_url(url_f, crawl_page))
     # print(df)
     save_to_csv(df, key_word)

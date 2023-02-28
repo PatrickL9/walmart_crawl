@@ -12,7 +12,8 @@ import os
 from selenium import webdriver
 import time
 import json
-from util.setting import logging, REDIS_CLIENT, WALMART_COOKIE_KEY
+from util.setting import REDIS_CLIENT, WALMART_COOKIE_KEY
+from util.logging_conf import logging
 
 
 headers = {
