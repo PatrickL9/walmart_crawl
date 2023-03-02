@@ -1,12 +1,20 @@
 # 需求背景
+## 1、详情页爬取
 在walmart平台进行关键词搜索，或访问关键词搜索的链接，爬取所有搜索结果的产品详情页数据。
+## 2、类目评论爬取
+根据搜索结果链接，爬取搜索结果总数、首页结果的星级、评论数量等信息。
 # 项目初始化及运行
 1、启动redis服务。
 
 2、运行`walmart_cookie_generate.py`，创建cookie池。cookie池数量视总爬取量而定。由于walmart反爬比较严格，建议每解析一个链接，消费一个cookie。
 
-3、修改`walmart_keyword_crawl.py`中的`run(url_front, ky, cp)`，直接运行即可。
+3、程序运行
+
+① 详情页爬取：修改`walmart_keyword_crawl.py`中的`run(url_front, ky, cp)`，直接运行即可。
+
+② 类目评论爬取：爬取目标链接，请修改`review_target.txt`，运行`walmart_review_crawl.py`。
 # 爬取信息
+## 1、详情页爬取
 1、搜索结果数：获取方式见图1.8
 
 2、是否做广告：获取方式见图1.8
@@ -54,3 +62,5 @@
  ![](img/img1.15.png) 图1.15
  ![](img/img1.16.png) 图1.16
  ![](img/img2.0.png) 图2.0
+## 2、类目评论爬取
+![img.png](img/img.png)
