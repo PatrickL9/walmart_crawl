@@ -63,4 +63,4 @@
  ![](img/img1.16.png) 图1.16
  ![](img/img2.0.png) 图2.0
 ## 2、类目评论爬取
-![img.png](img/img.png)
+![](img/img.png)
